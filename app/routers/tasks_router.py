@@ -4,18 +4,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app import models, schemas
+from app.constant import MAX_PAGE_SIZE
 from app.deps import get_current_user, get_db, require_manager
 from app.generic_pagination import paginate_query
+from app.helpers import safe_commit
 
 router = APIRouter(prefix="", tags=["tasks"])
 
 
-# Manager: list workers
+# ----------------- Endpoints -----------------
 @router.get("/workers/", response_model=schemas.PaginatedResponse[schemas.UserOut])
 def list_workers(
     request: Request,
     page: int = 1,
-    page_size: int = 10,
+    page_size: int = Query(10, le=MAX_PAGE_SIZE),
     db: Session = Depends(get_db),
     manager=Depends(require_manager),
 ):
@@ -27,7 +29,6 @@ def list_workers(
     return paginate_query(request, q, page, page_size)
 
 
-# Manager: assign task
 @router.post("/tasks/", response_model=schemas.TaskOut)
 def create_task(
     task_in: schemas.TaskCreate,
@@ -49,20 +50,17 @@ def create_task(
         assigned_by=manager.id,
     )
     db.add(task)
-    db.commit()
+    safe_commit(db)
     db.refresh(task)
     return task
 
 
-# Worker or Manager: list their tasks
 @router.get("/tasks/my", response_model=schemas.PaginatedResponse[schemas.TaskOut])
 def my_tasks(
     request: Request,
     page: int = 1,
-    page_size: int = 10,
-    status: Union[str, None] = Query(
-        None, description="Filter tasks by status: pending/in_progress/completed"
-    ),
+    page_size: int = Query(10, le=MAX_PAGE_SIZE),
+    status: Union[str, None] = Query(None, description="pending/in_progress/completed"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -78,12 +76,15 @@ def my_tasks(
             .filter(models.Task.assigned_by == current_user.id)
             .order_by(models.Task.id)
         )
-    if status and status in ("pending", "in_progress", "completed"):
+    if status and status in (
+        models.TaskStatus.pending.value,
+        models.TaskStatus.in_progress.value,
+        models.TaskStatus.completed.value,
+    ):
         q = q.filter(models.Task.status == status)
     return paginate_query(request, q, page, page_size)
 
 
-# Worker: update status
 @router.patch("/tasks/{task_id}/status", response_model=schemas.TaskOut)
 def update_status(
     task_id: int,
@@ -100,6 +101,6 @@ def update_status(
         raise HTTPException(status_code=400, detail="Invalid status")
     task.status = status_in.status
     db.add(task)
-    db.commit()
+    safe_commit(db)
     db.refresh(task)
     return task
