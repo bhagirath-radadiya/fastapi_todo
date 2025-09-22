@@ -1,0 +1,7 @@
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.docformatter]
+wrap-summaries = 88
+wrap-descriptions = 88

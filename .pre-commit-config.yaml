@@ -1,0 +1,61 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        exclude: ^alembic/
+      - id: check-json
+        exclude: ^alembic/
+      - id: check-toml
+        exclude: ^alembic/
+      - id: check-added-large-files
+        exclude: ^alembic/
+      - id: detect-private-key
+        exclude: ^alembic/
+      - id: end-of-file-fixer
+        exclude: ^alembic/
+      - id: trailing-whitespace
+        exclude: ^alembic/
+      - id: mixed-line-ending
+        exclude: ^alembic/
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.10
+        exclude: ^alembic/
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        exclude: ^alembic/
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-bugbear, flake8-comprehensions]
+        exclude: ^alembic/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-PyYAML]
+        exclude: ^alembic/
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: ["-ll"]
+        exclude: ^alembic/
+
+  - repo: https://github.com/myint/docformatter
+    rev: v1.7.5
+    hooks:
+      - id: docformatter
+        args: ["--in-place", "--wrap-summaries=88", "--wrap-descriptions=88"]
+        exclude: ^alembic/

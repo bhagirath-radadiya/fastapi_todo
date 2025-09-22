@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from .database import Base
+
+from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -14,13 +16,13 @@ class User(Base):
         "Task",
         foreign_keys="Task.assigned_to",
         back_populates="assignee",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
     tasks_assigned_by = relationship(
         "Task",
         foreign_keys="Task.assigned_by",
         back_populates="assigner",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
 
@@ -34,5 +36,9 @@ class Task(Base):
     assigned_by = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # relationships
-    assignee = relationship("User", foreign_keys=[assigned_to], back_populates="tasks_assigned_to")
-    assigner = relationship("User", foreign_keys=[assigned_by], back_populates="tasks_assigned_by")
+    assignee = relationship(
+        "User", foreign_keys=[assigned_to], back_populates="tasks_assigned_to"
+    )
+    assigner = relationship(
+        "User", foreign_keys=[assigned_by], back_populates="tasks_assigned_by"
+    )
